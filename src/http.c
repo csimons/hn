@@ -33,8 +33,11 @@ struct http_response *http_get(const char *url, struct string_pair *headers,
 		return NULL;
 	}
 
-	struct http_response *response = malloc(sizeof(struct http_response));
-	memset(response, 0, sizeof(struct http_response));
+	struct http_response *response = calloc(1, sizeof(struct http_response));
+	if (response == NULL) {
+		curl_easy_cleanup(curl);
+		return NULL;
+	}
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_secs);
@@ -84,8 +87,11 @@ struct http_response *http_post(const char *url, struct string_pair *headers,
 		return NULL;
 	}
 
-	struct http_response *response = malloc(sizeof(struct http_response));
-	memset(response, 0, sizeof(struct http_response));
+	struct http_response *response = calloc(1, sizeof(struct http_response));
+	if (response == NULL) {
+		curl_easy_cleanup(curl);
+		return NULL;
+	}
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_secs);

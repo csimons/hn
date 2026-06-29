@@ -30,10 +30,10 @@ void string_pair_free_cascade(struct string_pair *h) {
 }
 
 struct string_pair *string_pair_new(const char *first, const char *second) {
-	struct string_pair *h = malloc(sizeof(struct string_pair));
-	memset(h, 0, sizeof(struct string_pair));
+	struct string_pair *h = calloc(1, sizeof(struct string_pair));
+	if (h == NULL)
+		return NULL;
 	h->first = strdup(first);
 	h->second = strdup(second);
-	h->next = NULL;
 	return h;
 }
