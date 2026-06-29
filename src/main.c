@@ -10,7 +10,6 @@
 #include <libxml/parser.h>
 
 #include "http.h"
-#include "strfind.h"
 
 #define MAXURL 512
 

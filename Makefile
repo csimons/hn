@@ -30,13 +30,11 @@ STATIC_LIBS=\
 OBJ=\
 	$(OBJ_DIR)/http.o \
 	$(OBJ_DIR)/main.o \
-	$(OBJ_DIR)/strfind.o \
 	$(OBJ_DIR)/substring.o \
 	$(OBJ_DIR)/types.o
 
 HEADERS=\
 	src/http.h \
-	src/strfind.h \
 	src/substring.h \
 	src/types.h
 
