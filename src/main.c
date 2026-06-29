@@ -33,7 +33,7 @@ void print_item(int index, char *title, int cols) {
 	}
 }
 
-void grab_item(char *path, int cols, xmlDoc *doc, xmlNode *node, int *index) {
+void grab_item(FILE *urlfile, int cols, xmlDoc *doc, xmlNode *node, int *index) {
 	if (strcmp(((char *)node->name), "item"))
 		return;
 
@@ -61,9 +61,7 @@ void grab_item(char *path, int cols, xmlDoc *doc, xmlNode *node, int *index) {
 		return;
 	}
 
-	FILE *fd = fopen(path, "a");
-	fprintf(fd, "%s\n", url);
-	fclose(fd);
+	fprintf(urlfile, "%s\n", url);
 
 	print_item(*index, title, cols);
 	free(title);
@@ -108,13 +106,21 @@ int fetch_feed(char *path) {
 	xmlNode *root = xmlDocGetRootElement(doc);
 	xmlNode *channel = root->children;
 
+	FILE *urlfile = fopen(path, "a");
+	if (urlfile == NULL) {
+		fprintf(stderr, "error: fopen: %s\n", path);
+		xmlFreeDoc(doc);
+		return 1;
+	}
+
 	int index = 0;
 	for (xmlNode *node = channel->children; node; node = node->next) {
-		grab_item(path, termsize.ws_col, doc, node, &index);
+		grab_item(urlfile, termsize.ws_col, doc, node, &index);
 		if (index == (termsize.ws_row - 1))
 			break; // Print only enough to fill the screen.
 	}
 
+	fclose(urlfile);
 	xmlFreeDoc(doc);
 
 	return 0;
