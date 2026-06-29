@@ -5,8 +5,10 @@ BIN_DIR=bin
 OS=$(shell uname -s | tr A-Z a-z)
 ifeq ($(OS),linux)
 STATIC_LIBDIR=/usr/lib/x86_64-linux-gnu
+INC=-I/usr/include/libxml2
 else
-STATIC_LIBDIR=/usr/local/lib
+STATIC_LIBDIR=$(shell brew --prefix openssl@3)/lib
+INC=-I$(shell xcrun --show-sdk-path)/usr/include/libxml2
 endif
 
 LIB=\
@@ -17,10 +19,8 @@ LIB=\
 	-lssl \
 	-lcrypto
 
-INC=\
-	-I/usr/include/libxml2
-
 CCFLAGS=-std=c11 -g -Wall -Wextra -Werror -D_GNU_SOURCE
+LDFLAGS=-L$(STATIC_LIBDIR)
 
 #$(STATIC_LIBDIR)/libxml2.a
 STATIC_LIBS=\
@@ -46,7 +46,7 @@ $(OBJ_DIR)/%.o: src/%.c
 
 $(BIN_DIR)/$(PROGRAM_NAME): $(OBJ) $(HEADERS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(CCFLAGS) $(STATIC_LIBS) $(INC) $(OBJ) -o $@ $(LIB)
+	$(CC) $(CCFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(INC) $(OBJ) -o $@ $(LIB)
 
 .PHONY: index
 index:
