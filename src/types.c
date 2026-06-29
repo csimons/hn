@@ -17,16 +17,11 @@ void string_pair_free(struct string_pair *h) {
 }
 
 void string_pair_free_cascade(struct string_pair *h) {
-	if (h == NULL)
-		return;
-
-	struct string_pair *tmp = NULL;
-	if (h->next != NULL)
-		tmp = h->next;
-
-	string_pair_free(h);
-	if (tmp != NULL)
-		string_pair_free_cascade(tmp);
+	while (h != NULL) {
+		struct string_pair *next = h->next;
+		string_pair_free(h);
+		h = next;
+	}
 }
 
 struct string_pair *string_pair_new(const char *first, const char *second) {
