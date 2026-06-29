@@ -28,7 +28,7 @@ void print_item(int index, char *title, int cols) {
 		char *c = title;
 		for (int i = 0; c && i < trunclen; i += 1)
 			putchar(*c++);
-		puts("... ");
+		puts("...");
 	}
 }
 
