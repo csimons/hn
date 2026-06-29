@@ -102,7 +102,7 @@ int fetch_feed(char *path) {
 
 	xmlDoc *doc = xmlReadMemory(xml_part, xml_len, NULL, NULL, 0);
 
-	free(response);
+	http_response_free(response);
 
 	xmlNode *root = xmlDocGetRootElement(doc);
 	xmlNode *channel = root->children;
