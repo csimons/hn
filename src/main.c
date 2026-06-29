@@ -136,6 +136,7 @@ void open_item(char *path, unsigned long target) {
 		}
 	}
 	fclose(fd);
+	url[strcspn(url, "\n")] = '\0';
 
 #if defined(__APPLE__)
 	char *cmd;
