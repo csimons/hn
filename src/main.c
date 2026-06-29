@@ -18,8 +18,8 @@ static inline char *xml_text(xmlDoc *doc, xmlNode *node) {
 	return (char *)xmlNodeListGetString(doc, node->xmlChildrenNode, 1);
 }
 
-void print_item(int *index, char *title, int cols) {
-	printf("%2d ", *index);
+void print_item(int index, char *title, int cols) {
+	printf("%2d ", index);
 	int avail_cols = cols - 3; // "%2d " prefix
 	int len = strlen(title);
 	if (len < avail_cols) {
@@ -65,7 +65,7 @@ void grab_item(char *path, int cols, xmlDoc *doc, xmlNode *node, int *index) {
 	fprintf(fd, "%s\n", url);
 	fclose(fd);
 
-	print_item(index, title, cols);
+	print_item(*index, title, cols);
 	free(title);
 	free(url);
 }
