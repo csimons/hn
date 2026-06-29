@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -183,7 +179,3 @@ void http_response_free(struct http_response *r) {
 
 	free(r);
 }
-
-#ifdef __cplusplus
-}
-#endif

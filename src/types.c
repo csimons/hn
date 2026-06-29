@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,7 +37,3 @@ struct string_pair *string_pair_new(const char *first, const char *second) {
 	h->next = NULL;
 	return h;
 }
-
-#ifdef __cplusplus
-}
-#endif
