@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -139,19 +140,19 @@ void open_item(char *path, unsigned long target) {
 	url[strcspn(url, "\n")] = '\0';
 
 #if defined(__APPLE__)
-	char *cmd;
-	asprintf(&cmd, "open %s", url);
-	system(cmd);
-	free(cmd);
+	const char *opener = "open";
 #elif defined(__linux__)
-	char *cmd;
-	asprintf(&cmd, "xdg-open %s", url);
-	system(cmd);
-	free(cmd);
+	const char *opener = "xdg-open";
 #else
 	fputs("OS not supported\n", stderr);
 	exit(1);
 #endif
+	pid_t pid = fork();
+	if (pid == 0) {
+		execlp(opener, opener, url, NULL);
+		_exit(1);
+	}
+	waitpid(pid, NULL, 0);
 }
 
 int main(int argc, char **argv) {
