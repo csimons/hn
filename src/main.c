@@ -154,8 +154,13 @@ void open_item(char *path, unsigned long target) {
 }
 
 int main(int argc, char **argv) {
+	const char *home = getenv("HOME");
+	if (home == NULL) {
+		fputs("error: HOME is not set\n", stderr);
+		return 1;
+	}
 	char *path;
-	asprintf(&path, "%s/.hn", getenv("HOME"));
+	asprintf(&path, "%s/.hn", home);
 
 	if (argc == 1) {
 		remove(path);
