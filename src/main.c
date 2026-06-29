@@ -83,11 +83,6 @@ int fetch_feed(char *path) {
 	struct winsize termsize;
 	ioctl(0, TIOCGWINSZ, (char *)&termsize);
 
-	struct string_pair *host =
-	    string_pair_new("Host", "news.ycombinator.com");
-	struct string_pair *agent = string_pair_new("User-Agent", "curl/0.0.1");
-	host->next = agent;
-
 	struct http_response *response =
 	    http_get("https://news.ycombinator.com/rss", NULL, 5);
 
@@ -108,7 +103,6 @@ int fetch_feed(char *path) {
 	xmlDoc *doc = xmlReadMemory(xml_part, xml_len, NULL, NULL, 0);
 
 	free(response);
-	string_pair_free_cascade(host);
 
 	xmlNode *root = xmlDocGetRootElement(doc);
 	xmlNode *channel = root->children;
