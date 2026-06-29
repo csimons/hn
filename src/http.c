@@ -7,6 +7,16 @@
 #include "http.h"
 #include "types.h"
 
+static struct curl_slist *build_headers(struct string_pair *headers) {
+	char buf[256];
+	struct curl_slist *list = NULL;
+	for (struct string_pair *p = headers; p != NULL; p = p->next) {
+		snprintf(buf, sizeof(buf), "%s: %s", p->first, p->second);
+		list = curl_slist_append(list, buf);
+	}
+	return list;
+}
+
 static size_t cb(void *data, size_t size, size_t nmemb, void *userp) {
 	size_t realsize = size * nmemb;
 	struct http_response *r = (struct http_response *)userp;
@@ -42,18 +52,7 @@ struct http_response *http_get(const char *url, struct string_pair *headers,
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_secs);
 
-	char header_buf[256];
-	struct curl_slist *list = NULL;
-	struct string_pair *current = headers;
-	while (current != NULL) {
-		memset(header_buf, 0, 256);
-		snprintf((char *)header_buf, 255, "%s: %s", current->first,
-			 current->second);
-
-		list = curl_slist_append(list, (char *)header_buf);
-
-		current = current->next;
-	}
+	struct curl_slist *list = build_headers(headers);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cb);
@@ -97,18 +96,7 @@ struct http_response *http_post(const char *url, struct string_pair *headers,
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_secs);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 
-	char header_buf[256];
-	struct curl_slist *list = NULL;
-	struct string_pair *current = headers;
-	while (current != NULL) {
-		memset(header_buf, 0, 256);
-		snprintf((char *)header_buf, 255, "%s: %s", current->first,
-			 current->second);
-
-		list = curl_slist_append(list, (char *)header_buf);
-
-		current = current->next;
-	}
+	struct curl_slist *list = build_headers(headers);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cb);
@@ -146,18 +134,7 @@ int http_post_no_response(const char *url, struct string_pair *headers,
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_secs);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 
-	char header_buf[256];
-	struct curl_slist *list = NULL;
-	struct string_pair *current = headers;
-	while (current != NULL) {
-		memset(header_buf, 0, 256);
-		snprintf((char *)header_buf, 255, "%s: %s", current->first,
-			 current->second);
-
-		list = curl_slist_append(list, (char *)header_buf);
-
-		current = current->next;
-	}
+	struct curl_slist *list = build_headers(headers);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
 	CURLcode res = curl_easy_perform(curl);
