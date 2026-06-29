@@ -19,7 +19,7 @@ LIB=\
 	-lssl \
 	-lcrypto
 
-CCFLAGS=-std=c11 -g -Wall -Wextra -Werror -D_GNU_SOURCE
+CFLAGS=-std=c11 -g -Wall -Wextra -Werror -D_GNU_SOURCE
 LDFLAGS=-L$(STATIC_LIBDIR)
 
 #$(STATIC_LIBDIR)/libxml2.a
@@ -40,11 +40,11 @@ HEADERS=\
 
 $(OBJ_DIR)/%.o: src/%.c
 	mkdir -p $(OBJ_DIR)
-	$(CC) $(CCFLAGS) $(INC) -c $^ -o $@
+	$(CC) $(CFLAGS) $(INC) -c $^ -o $@
 
 $(BIN_DIR)/$(PROGRAM_NAME): $(OBJ) $(HEADERS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(CCFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(INC) $(OBJ) -o $@ $(LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(INC) $(OBJ) -o $@ $(LIB)
 
 .PHONY: index
 index:
