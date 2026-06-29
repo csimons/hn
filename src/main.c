@@ -123,6 +123,10 @@ void open_item(char *path, unsigned long target) {
 	char url[MAXURL];
 
 	FILE *fd = fopen(path, "r");
+	if (fd == NULL) {
+		fprintf(stderr, "error: fopen: %s\n", path);
+		return;
+	}
 	for (unsigned long i = 1; i <= target; i += 1) {
 		fgets(url, MAXURL, fd);
 		if (feof(fd)) {
