@@ -125,6 +125,10 @@ int fetch_feed(char *path) {
 	return 0;
 }
 
+static inline int is_wsl(void) {
+	return getenv("WSL_DISTRO_NAME") != NULL;
+}
+
 void open_item(char *path, unsigned long target) {
 	char url[MAXURL];
 
@@ -144,17 +148,21 @@ void open_item(char *path, unsigned long target) {
 	fclose(fd);
 	url[strcspn(url, "\n")] = '\0';
 
-#if defined(__APPLE__)
-	const char *opener = "open";
-#elif defined(__linux__)
-	const char *opener = "xdg-open";
-#else
-	fputs("OS not supported\n", stderr);
-	exit(1);
-#endif
 	pid_t pid = fork();
 	if (pid == 0) {
-		execlp(opener, opener, url, NULL);
+#if defined(__APPLE__)
+		execlp("open", "open", url, NULL);
+#elif defined(_WIN32)
+		execlp("powershell.exe", "powershell.exe", "-Command", "Start-Process", url, NULL);
+#elif defined(__linux__)
+		if (is_wsl())
+			execlp("powershell.exe", "powershell.exe", "-Command", "Start-Process", url, NULL);
+		else
+			execlp("xdg-open", "xdg-open", url, NULL);
+#else
+		fputs("OS not supported\n", stderr);
+		_exit(1);
+#endif
 		_exit(1);
 	}
 	waitpid(pid, NULL, 0);
