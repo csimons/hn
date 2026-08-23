@@ -28,7 +28,13 @@ struct string_pair *string_pair_new(const char *first, const char *second) {
 	struct string_pair *h = calloc(1, sizeof(struct string_pair));
 	if (h == NULL)
 		return NULL;
+
 	h->first = strdup(first);
 	h->second = strdup(second);
+	if (h->first == NULL || h->second == NULL) {
+		string_pair_free(h);
+		return NULL;
+	}
+
 	return h;
 }

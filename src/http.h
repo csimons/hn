@@ -1,5 +1,5 @@
-#ifndef BERT_HTTP_H
-#define BERT_HTTP_H
+#ifndef HN_HTTP_H
+#define HN_HTTP_H
 
 #ifdef __cplusplus
 extern "C" {

@@ -12,23 +12,27 @@
 #include "http.h"
 
 #define MAXURL 512
+#define ITEM_PREFIX "%2d "
+#define ITEM_PREFIX_LEN ((int)sizeof("NN ") - 1)
+#define TRUNC_SUFFIX "..."
+#define TRUNC_SUFFIX_LEN ((int)sizeof(TRUNC_SUFFIX) - 1)
 
 static inline char *xml_text(xmlDoc *doc, xmlNode *node) {
 	return (char *)xmlNodeListGetString(doc, node->xmlChildrenNode, 1);
 }
 
-void print_item(int index, char *title, int cols) {
-	printf("%2d ", index);
-	int avail_cols = cols - 3; // "%2d " prefix
+void print_item(int index, const char *title, int cols) {
+	printf(ITEM_PREFIX, index);
+	int avail_cols = cols - ITEM_PREFIX_LEN;
 	int len = strlen(title);
 	if (len < avail_cols) {
 		puts(title);
 	} else {
-		int trunclen = avail_cols - 4; // "... " suffix
-		char *c = title;
+		int trunclen = avail_cols - TRUNC_SUFFIX_LEN;
+		const char *c = title;
 		for (int i = 0; c && i < trunclen; i += 1)
 			putchar(*c++);
-		puts("...");
+		puts(TRUNC_SUFFIX);
 	}
 }
 
@@ -37,49 +41,42 @@ void grab_item(FILE *urlfile, int cols, xmlDoc *doc, xmlNode *node, int *index) 
 		return;
 
 	char *title = NULL;
-	char *url = NULL;
+	char *comments_url = NULL;
 
 	*index += 1;
 	for (xmlNode *attr = node->children; attr; attr = attr->next) {
 		if (!title && !strcmp((char *)attr->name, "title"))
 			title = xml_text(doc, attr);
 
-		if (!url && !strcmp((char *)attr->name, "comments"))
-			url = xml_text(doc, attr);
+		if (!comments_url && !strcmp((char *)attr->name, "comments"))
+			comments_url = xml_text(doc, attr);
 
-		if (title && url)
+		if (title && comments_url)
 			break;
 	}
 
-	if (!title || !url) {
+	if (!title || !comments_url) {
 		fputs("error: grab_item\n", stderr);
 		if (title)
 			free(title);
-		if (url)
-			free(url);
+		if (comments_url)
+			free(comments_url);
 		return;
 	}
 
-	fprintf(urlfile, "%s\n", url);
+	fprintf(urlfile, "%s\n", comments_url);
 
 	print_item(*index, title, cols);
 	free(title);
-	free(url);
-}
-
-int last_index(const char *string, const char c) {
-	size_t len = strlen(string);
-
-	for (int i = len - 1; i >= 0; i -= 1)
-		if (string[i] == c)
-			return i;
-
-	return -1;
+	free(comments_url);
 }
 
 int fetch_feed(char *path) {
 	struct winsize termsize;
-	ioctl(0, TIOCGWINSZ, (char *)&termsize);
+	if (ioctl(0, TIOCGWINSZ, (char *)&termsize) == -1) {
+		termsize.ws_row = 24;
+		termsize.ws_col = 80;
+	}
 
 	struct http_response *response =
 	    http_get("https://news.ycombinator.com/rss", NULL, 5);
@@ -90,19 +87,35 @@ int fetch_feed(char *path) {
 	}
 
 	char *xml_part = strchr(response->body, '<');
-	int xml_end_idx = last_index(xml_part, '>');
-	if (xml_end_idx < 0) {
+	if (xml_part == NULL) {
 		fputs("error: did not get XML response\n", stderr);
+		http_response_free(response);
 		return 1;
 	}
-	size_t xml_len = xml_end_idx + 1;
-	xml_part[xml_end_idx + 1] = '\0';
+	char *xml_end = strrchr(xml_part, '>');
+	if (xml_end == NULL) {
+		fputs("error: did not get XML response\n", stderr);
+		http_response_free(response);
+		return 1;
+	}
+	size_t xml_len = (xml_end - xml_part) + 1;
+	xml_end[1] = '\0';
 
 	xmlDoc *doc = xmlReadMemory(xml_part, xml_len, NULL, NULL, 0);
 
 	http_response_free(response);
 
+	if (doc == NULL) {
+		fputs("error: failed to parse XML response\n", stderr);
+		return 1;
+	}
+
 	xmlNode *root = xmlDocGetRootElement(doc);
+	if (root == NULL || root->children == NULL) {
+		fputs("error: unexpected XML structure\n", stderr);
+		xmlFreeDoc(doc);
+		return 1;
+	}
 	xmlNode *channel = root->children;
 
 	FILE *urlfile = fopen(path, "a");
@@ -129,7 +142,7 @@ static inline int is_wsl(void) {
 	return getenv("WSL_DISTRO_NAME") != NULL;
 }
 
-void open_item(char *path, unsigned long target) {
+void open_item(const char *path, unsigned long target) {
 	char url[MAXURL];
 
 	FILE *fd = fopen(path, "r");
@@ -138,8 +151,7 @@ void open_item(char *path, unsigned long target) {
 		return;
 	}
 	for (unsigned long i = 1; i <= target; i += 1) {
-		fgets(url, MAXURL, fd);
-		if (feof(fd)) {
+		if (fgets(url, MAXURL, fd) == NULL) {
 			fprintf(stderr, "invalid index: %lu\n", target);
 			fclose(fd);
 			return;
@@ -149,6 +161,10 @@ void open_item(char *path, unsigned long target) {
 	url[strcspn(url, "\n")] = '\0';
 
 	pid_t pid = fork();
+	if (pid == -1) {
+		fputs("error: fork\n", stderr);
+		return;
+	}
 	if (pid == 0) {
 #if defined(__APPLE__)
 		execlp("open", "open", url, NULL);
@@ -175,7 +191,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	char *path;
-	asprintf(&path, "%s/.hn", home);
+	if (asprintf(&path, "%s/.hn", home) == -1) {
+		fputs("error: asprintf\n", stderr);
+		return 1;
+	}
 
 	if (argc == 1) {
 		remove(path);
@@ -209,4 +228,5 @@ int main(int argc, char **argv) {
 	}
 
 	free(path);
+	return 0;
 }

@@ -11,6 +11,8 @@ static struct curl_slist *build_headers(struct string_pair *headers) {
 	char buf[256];
 	struct curl_slist *list = NULL;
 	for (struct string_pair *p = headers; p != NULL; p = p->next) {
+		/* Silently truncates a header exceeding sizeof(buf); fine for
+		 * this program's headers, but worth knowing. */
 		snprintf(buf, sizeof(buf), "%s: %s", p->first, p->second);
 		list = curl_slist_append(list, buf);
 	}

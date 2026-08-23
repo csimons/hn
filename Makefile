@@ -22,6 +22,10 @@ LIB=\
 CFLAGS=-std=c11 -g -Wall -Wextra -Werror -D_GNU_SOURCE
 LDFLAGS=-L$(STATIC_LIBDIR)
 
+DEBUG_OBJ_DIR=$(OBJ_DIR)/debug
+DEBUG_BIN_DIR=$(BIN_DIR)/debug
+SANFLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer
+
 #$(STATIC_LIBDIR)/libxml2.a
 STATIC_LIBS=\
 	$(STATIC_LIBDIR)/libssl.a \
@@ -30,21 +34,30 @@ STATIC_LIBS=\
 OBJ=\
 	$(OBJ_DIR)/http.o \
 	$(OBJ_DIR)/main.o \
-	$(OBJ_DIR)/substring.o \
 	$(OBJ_DIR)/types.o
 
 HEADERS=\
 	src/http.h \
-	src/substring.h \
 	src/types.h
+
+DEBUG_OBJ=$(patsubst $(OBJ_DIR)/%.o,$(DEBUG_OBJ_DIR)/%.o,$(OBJ))
 
 $(OBJ_DIR)/%.o: src/%.c
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INC) -c $^ -o $@
 
+$(DEBUG_OBJ_DIR)/%.o: src/%.c
+	mkdir -p $(DEBUG_OBJ_DIR)
+	$(CC) $(CFLAGS) $(SANFLAGS) $(INC) -c $^ -o $@
+
 $(BIN_DIR)/$(PROGRAM_NAME): $(OBJ) $(HEADERS)
 	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(INC) $(OBJ) -o $@ $(LIB)
+
+.PHONY: debug
+debug: $(DEBUG_OBJ) $(HEADERS)
+	mkdir -p $(DEBUG_BIN_DIR)
+	$(CC) $(CFLAGS) $(SANFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(INC) $(DEBUG_OBJ) -o $(DEBUG_BIN_DIR)/$(PROGRAM_NAME) $(LIB)
 
 .PHONY: index
 index:

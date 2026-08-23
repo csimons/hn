@@ -1,5 +1,5 @@
-#ifndef BERT_TYPES_H
-#define BERT_TYPES_H
+#ifndef HN_TYPES_H
+#define HN_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {
