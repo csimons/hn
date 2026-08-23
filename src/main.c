@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -138,7 +139,7 @@ int fetch_feed(char *path) {
 	return 0;
 }
 
-static inline int is_wsl(void) {
+static inline bool is_wsl(void) {
 	return getenv("WSL_DISTRO_NAME") != NULL;
 }
 
