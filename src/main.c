@@ -139,9 +139,11 @@ int fetch_feed(char *path) {
 	return 0;
 }
 
+#if defined(__linux__)
 static inline bool is_wsl(void) {
 	return getenv("WSL_DISTRO_NAME") != NULL;
 }
+#endif
 
 void open_item(const char *path, unsigned long target) {
 	char url[MAXURL];
