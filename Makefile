@@ -4,10 +4,8 @@ BIN_DIR=bin
 
 OS=$(shell uname -s | tr A-Z a-z)
 ifeq ($(OS),linux)
-LIBDIR=/usr/lib/x86_64-linux-gnu
 INC=-I/usr/include/libxml2
 else
-LIBDIR=$(shell brew --prefix openssl@3)/lib
 INC=-I$(shell xcrun --show-sdk-path)/usr/include/libxml2
 endif
 
@@ -15,12 +13,9 @@ LIB=\
 	-lcurl \
 	-lxml2 \
 	-ldl \
-	-lpthread \
-	-lssl \
-	-lcrypto
+	-lpthread
 
 CFLAGS=-std=c11 -g -Wall -Wextra -Werror -D_GNU_SOURCE
-LDFLAGS=-L$(LIBDIR)
 
 DEBUG_OBJ_DIR=$(OBJ_DIR)/debug
 DEBUG_BIN_DIR=$(BIN_DIR)/debug
@@ -47,12 +42,12 @@ $(DEBUG_OBJ_DIR)/%.o: src/%.c
 
 $(BIN_DIR)/$(PROGRAM_NAME): $(OBJ) $(HEADERS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(INC) $(OBJ) -o $@ $(LIB)
+	$(CC) $(CFLAGS) $(INC) $(OBJ) -o $@ $(LIB)
 
 .PHONY: debug
 debug: $(DEBUG_OBJ) $(HEADERS)
 	mkdir -p $(DEBUG_BIN_DIR)
-	$(CC) $(CFLAGS) $(SANFLAGS) $(LDFLAGS) $(INC) $(DEBUG_OBJ) -o $(DEBUG_BIN_DIR)/$(PROGRAM_NAME) $(LIB)
+	$(CC) $(CFLAGS) $(SANFLAGS) $(INC) $(DEBUG_OBJ) -o $(DEBUG_BIN_DIR)/$(PROGRAM_NAME) $(LIB)
 
 .PHONY: index
 index:
